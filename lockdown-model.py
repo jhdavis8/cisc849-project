@@ -37,7 +37,7 @@ class Household:
     
     def __init__(self, s, r, o):
         self.social_eagerness = s
-        self.exposure_chance = sum(o)
+        self.exposure_chance = overall_exposure(o)
         self.risk_factor = r
         self.n = len(o)
 
@@ -57,8 +57,8 @@ class Household:
             #                                   1 - self.risk_factor)
             return self.social_eagerness - coalition_exposure*self.risk_factor*decay()*infection()
 
-    #def __str__(self):
-    #    return str(round(self.social_eagerness, 3))
+    def __str__(self):
+        return '<' + str(round(self.social_eagerness, 1)) + 'S, ' + str(round(self.risk_factor, 1)) + 'R, ' + str(round(self.exposure_chance, 1)) + 'E>'
 
 class Coalition:
     members = []
@@ -69,7 +69,7 @@ class Coalition:
         self.idnum = i
 
     def __str__(self):
-        return str(list(map(str, self.members)))
+        return str(list(map(str, self.members)))+'\n'
     
 class World:
     agent_set = []
@@ -80,7 +80,7 @@ class World:
         for i in range(0, NUM_AGENTS):
             self.agent_set.append(Household(random.uniform(MIN_SOC,  MAX_SOC),
                                             random.uniform(MIN_EX,   MAX_EX),
-                                            np.random.choice([1,2,3,4], size = random.randint(1,5))))
+                                            np.random.choice([0.02,0.04,0.08,0.16], size = random.randint(1,5))))
         self.coalition_set = []
         for i in range(0, len(self.agent_set)):
             self.coalition_set.append(Coalition([self.agent_set[i]], i))
@@ -117,7 +117,15 @@ class World:
         return best_c
 
     def __str__(self):
-        return str(list(map(str, self.coalition_set)))
+        result = 'Coalition sizes: ( '
+        for c in self.coalition_set:
+            if len(c.members):
+                result += str(len(c.members)) + ' '
+        result += ')\nCoalition list:\n\n'
+        for c in list(map(str, self.coalition_set)):
+            if len(c) > 3:
+                result += c
+        return result
     
     def simulate(self):
         move_count = 0
@@ -142,7 +150,8 @@ def decay():
 
 def infection():
     return TIME + 1
-            
+
+# test cases for exposure function
 assert overall_exposure([0.5, 0.2]) == 0.6
 assert overall_exposure([0.5, 0.2, 0.3]) == 0.72
 
