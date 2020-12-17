@@ -52,7 +52,7 @@ class Household:
             return self.value()
         else:
             exposures_list = [o.exposure_chance for o in list(set().union(members, [self]))]
-            coalition_exposure = overall_exposure(exposures_list)
+            coalition_exposure = sum(exposures_list)
             #return pow(self.social_eagerness,
             #           self.risk_factor) / pow(coalition_exposure,
             #                                   1 - self.risk_factor)
@@ -102,10 +102,11 @@ class World:
         return None
     
     def best_coalition(self, agent):
-        active_coalitions = []
-        for c in self.coalition_set:
-            if c.members:
-                active_coalitions.append(c)
+        #active_coalitions = []
+        #for c in self.coalition_set:
+        #    if c.members:
+        #        active_coalitions.append(c)
+        active_coalitions = self.coalition_set
         best_c = -1
         max_payoff = -1
         for c in active_coalitions:
@@ -115,7 +116,10 @@ class World:
                 best_c = c
                 max_payoff = cur_payoff
         #print('--------------------')
-        return best_c
+        if best_c == -1:
+            return self.current_coalition(agent)
+        else:
+            return best_c
 
     def __str__(self):
         result = 'Coalition sizes: ( '
@@ -123,12 +127,12 @@ class World:
             if len(c.members):
                 result += str(len(c.members)) + ' '
         result += ')\n'
-        '''
+        
         result += 'Coalition list:\n\n'
         for c in list(map(str, self.coalition_set)):
             if len(c) > 3:
                 result += c
-        '''
+        
         return result
     
     def simulate(self):
