@@ -13,7 +13,7 @@ VAR_SOC            = 1.18
 TIME               = 0
 ROUNDS             = 8
 RISK_FACTOR_DIST   = [0]*2 + [0.25]*8 + [0.5]*25 + [0.75]*35 + [1]*30
-OCCUPATION_CLASSES = [0.02, 0.04, 0.08, 0.16]
+OCCUPATION_CLASSES = [0.2, 0.4, 0.8, 1.6]
 MIN_MEMBERS        = 1
 MAX_MEMBERS        = 5
 INFECTION_RATES    = [0.9, 1.0, 1.5, 2.0, 4.0, 1.2, 1.1, 2.0]
@@ -38,7 +38,7 @@ class Household:
     
     def __init__(self, s, r, o):
         self.social_eagerness = s
-        self.exposure_chance = overall_exposure(o)
+        self.exposure_chance = sum(o)
         self.risk_factor = r
         self.n = len(o)
 
