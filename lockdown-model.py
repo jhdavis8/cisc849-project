@@ -2,6 +2,8 @@ import pandas as pd
 from itertools import combinations
 from functools import reduce
 import random
+import numpy as np
+import math
 
 NUM_AGENTS     = 20
 MAX_TIMESTEPS  = 40
@@ -12,27 +14,32 @@ MIN_EX         = 0
 MAX_EX         = 1
 MIN_RISK       = 0
 MAX_RISK       = 1
+TIME           = 0
+ROUNDS         = 2
 
 def overall_exposure(p_values):
     p_values = list(map(float, p_values))
     if len(p_values) == 1:
-        return p_values[0]
+           return p_values[0]
     overall_prob = sum(p_values)
     for i in range(1, len(p_values)):
         combos = list(combinations(p_values, i + 1))
         for comb in combos:
             overall_prob += pow(-1, i)*reduce((lambda x, y: x*y), comb)
+
     return overall_prob
 
 class Household:
     social_eagerness = 0
     exposure_chance = 0
     risk_factor = 0
+    n = 0
     
-    def __init__(self, s, e, r):
+    def __init__(self, s, r, o):
         self.social_eagerness = s
-        self.exposure_chance = e
+        self.exposure_chance = sum(o)
         self.risk_factor = r
+        self.n = len(o)
 
     def value(self):
         #return self.risk_factor/(self.exposure_chance*self.social_eagerness)
@@ -48,7 +55,7 @@ class Household:
             #return pow(self.social_eagerness,
             #           self.risk_factor) / pow(coalition_exposure,
             #                                   1 - self.risk_factor)
-            return self.social_eagerness - coalition_exposure*self.risk_factor
+            return self.social_eagerness - coalition_exposure*self.risk_factor*decay()*infection()
 
     #def __str__(self):
     #    return str(round(self.social_eagerness, 3))
@@ -73,7 +80,7 @@ class World:
         for i in range(0, NUM_AGENTS):
             self.agent_set.append(Household(random.uniform(MIN_SOC,  MAX_SOC),
                                             random.uniform(MIN_EX,   MAX_EX),
-                                            random.uniform(MIN_RISK, MAX_RISK)))
+                                            np.random.choice([1,2,3,4], size = random.randint(1,5))))
         self.coalition_set = []
         for i in range(0, len(self.agent_set)):
             self.coalition_set.append(Coalition([self.agent_set[i]], i))
@@ -122,19 +129,30 @@ class World:
                 cur = self.current_coalition(a).idnum
                 if best != cur:
                     self.move_to(a, best)
-                    print("agent moved")
+                    #print("agent moved")
                     move_count += 1
                 # determine coalition with the highest value
                 # compare highest value to self.
                 # if self is best, leave coalition/stay alone
                 # if a coalition is best, join it/stay if already there
-            print('-------------------------------')
-        print(move_count)
-        return None
+            #print('-------------------------------')
+        
+def decay():
+    return 1 - 1/math.sqrt(1+ 0.5*(math.exp(-16*TIME + 12)))
+
+def infection():
+    return TIME + 1
             
 assert overall_exposure([0.5, 0.2]) == 0.6
 assert overall_exposure([0.5, 0.2, 0.3]) == 0.72
 
-world_1 = World()
-world_1.simulate()
-print(world_1)
+
+
+#forming coalitions in each round
+for i in range(ROUNDS):
+    TIME = i
+    world_1 = World()
+    world_1.simulate()
+    print(world_1)
+    print('-------------------------------')
+
