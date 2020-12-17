@@ -5,17 +5,18 @@ import random
 import numpy as np
 import math
 
-NUM_AGENTS     = 20
-MAX_TIMESTEPS  = 40
-
-MIN_SOC        = 0
-MAX_SOC        = 1
-MIN_EX         = 0
-MAX_EX         = 1
-MIN_RISK       = 0
-MAX_RISK       = 1
-TIME           = 0
-ROUNDS         = 2
+NUM_AGENTS         = 20
+MAX_TIMESTEPS      = 10
+                   
+MEAN_SOC           = 3.84
+VAR_SOC            = 1.18
+TIME               = 0
+ROUNDS             = 8
+RISK_FACTOR_DIST   = [0]*2 + [0.25]*8 + [0.5]*25 + [0.75]*35 + [1]*30
+OCCUPATION_CLASSES = [0.02, 0.04, 0.08, 0.16]
+MIN_MEMBERS        = 1
+MAX_MEMBERS        = 5
+INFECTION_RATES    = [0.9, 1.0, 1.5, 2.0, 4.0, 1.2, 1.1, 2.0]
 
 def overall_exposure(p_values):
     p_values = list(map(float, p_values))
@@ -78,9 +79,9 @@ class World:
     def __init__(self):
         self.agent_set = []
         for i in range(0, NUM_AGENTS):
-            self.agent_set.append(Household(random.uniform(MIN_SOC,  MAX_SOC),
-                                            random.uniform(MIN_EX,   MAX_EX),
-                                            np.random.choice([0.02,0.04,0.08,0.16], size = random.randint(1,5))))
+            self.agent_set.append(Household(np.random.normal(loc=MEAN_SOC, scale=VAR_SOC),
+                                            np.random.choice(RISK_FACTOR_DIST),
+                                            np.random.choice(OCCUPATION_CLASSES, size = random.randint(MIN_MEMBERS,MAX_MEMBERS))))
         self.coalition_set = []
         for i in range(0, len(self.agent_set)):
             self.coalition_set.append(Coalition([self.agent_set[i]], i))
@@ -121,10 +122,13 @@ class World:
         for c in self.coalition_set:
             if len(c.members):
                 result += str(len(c.members)) + ' '
-        result += ')\nCoalition list:\n\n'
+        result += ')\n'
+        '''
+        result += 'Coalition list:\n\n'
         for c in list(map(str, self.coalition_set)):
             if len(c) > 3:
                 result += c
+        '''
         return result
     
     def simulate(self):
@@ -146,10 +150,10 @@ class World:
             #print('-------------------------------')
         
 def decay():
-    return 1 - 1/math.sqrt(1+ 0.5*(math.exp(-16*TIME + 12)))
+    return 1 - 1/math.sqrt(1+ 0.5*(math.exp(-16*(TIME/4) + 12)))
 
 def infection():
-    return TIME + 1
+    return INFECTION_RATES[TIME]
 
 # test cases for exposure function
 assert overall_exposure([0.5, 0.2]) == 0.6
@@ -158,9 +162,9 @@ assert overall_exposure([0.5, 0.2, 0.3]) == 0.72
 
 
 #forming coalitions in each round
+world_1 = World()
 for i in range(ROUNDS):
     TIME = i
-    world_1 = World()
     world_1.simulate()
     print(world_1)
     print('-------------------------------')
