@@ -13,7 +13,7 @@ VAR_SOC            = 1.18
 TIME               = 0
 ROUNDS             = 8
 RISK_FACTOR_DIST   = [0]*2 + [0.25]*8 + [0.5]*25 + [0.75]*35 + [1]*30
-OCCUPATION_CLASSES = [0.2, 0.4, 0.8, 1.6]
+OCCUPATION_CLASSES = [9]*3 + [6.5]*1 + [7.5]*11 + [2.1]*4 + [1.8]*10 + [0.8]*3 + [1.3]*2 + [1.1]*3 + [1]*86
 MIN_MEMBERS        = 1
 MAX_MEMBERS        = 5
 INFECTION_RATES    = [0.9, 1.0, 1.5, 2.0, 4.0, 1.2, 1.1, 2.0]
@@ -158,8 +158,6 @@ def infection():
 # test cases for exposure function
 assert overall_exposure([0.5, 0.2]) == 0.6
 assert overall_exposure([0.5, 0.2, 0.3]) == 0.72
-
-
 
 #forming coalitions in each round
 world_1 = World()
