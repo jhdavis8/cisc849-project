@@ -4,19 +4,21 @@ from functools import reduce
 import random
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 NUM_AGENTS         = 20
 MAX_TIMESTEPS      = 10
                    
-MEAN_SOC           = 3.84
-VAR_SOC            = 1.18
+MEAN_SOC           = 3.84/12
+VAR_SOC            = 1.18/12
 TIME               = 0
-ROUNDS             = 8
-RISK_FACTOR_DIST   = [0]*2 + [0.25]*8 + [0.5]*25 + [0.75]*35 + [1]*30
-OCCUPATION_CLASSES = [9]*3 + [6.5]*1 + [7.5]*11 + [2.1]*4 + [1.8]*10 + [0.8]*3 + [1.3]*2 + [1.1]*3 + [1]*86
+ROUNDS             = 16
+RISK_FACTOR_DIST   = [0.01]*2 + [0.25]*8 + [0.5]*25 + [0.75]*35 + [1]*30
+OCCUPATION_CLASSES = [(9/9)]*3 + [(6.5/9)]*1 + [(7.5/9)]*11 + [(2.1/9)]*4 + [(1.8/9)]*10 + [(0.8/9)]*3 + [(1.3/9)]*2 + [(1.1/9)]*3 + [(1/9)]*86
 MIN_MEMBERS        = 1
 MAX_MEMBERS        = 5
-INFECTION_RATES    = [0.9, 1.0, 1.5, 2.0, 4.0, 1.2, 1.1, 2.0]
+INFECTION_RATES    = [(0.9/1), (1.0/1), (1.5/1), (2.0/1), (4.0/1), (1.2/1), (1.1/1), (2.0/1)]*3
+DECAY_STRETCH      = 15
 
 def overall_exposure(p_values):
     p_values = list(map(float, p_values))
@@ -38,7 +40,7 @@ class Household:
     
     def __init__(self, s, r, o):
         self.social_eagerness = s
-        self.exposure_chance = sum(o)
+        self.exposure_chance = sum(o)/len(o)
         self.risk_factor = r
         self.n = len(o)
 
@@ -56,7 +58,7 @@ class Household:
             #return pow(self.social_eagerness,
             #           self.risk_factor) / pow(coalition_exposure,
             #                                   1 - self.risk_factor)
-            return self.social_eagerness - coalition_exposure*self.risk_factor*decay()*infection()
+            return self.social_eagerness - (coalition_exposure*self.risk_factor*decay()*infection())
 
     def __str__(self):
         return '<' + str(round(self.social_eagerness, 1)) + 'S, ' + str(round(self.risk_factor, 1)) + 'R, ' + str(round(self.exposure_chance, 1)) + 'E>'
@@ -102,11 +104,11 @@ class World:
         return None
     
     def best_coalition(self, agent):
-        #active_coalitions = []
-        #for c in self.coalition_set:
-        #    if c.members:
-        #        active_coalitions.append(c)
-        active_coalitions = self.coalition_set
+        active_coalitions = []
+        for c in self.coalition_set:
+            if c.members:
+                active_coalitions.append(c)
+        #active_coalitions = self.coalition_set
         best_c = -1
         max_payoff = -1
         for c in active_coalitions:
@@ -119,6 +121,10 @@ class World:
         if best_c == -1:
             return self.current_coalition(agent)
         else:
+            if max_payoff < 0:
+                for c in self.coalition_set:
+                    if not c.members:
+                        return c
             return best_c
 
     def __str__(self):
@@ -127,12 +133,14 @@ class World:
             if len(c.members):
                 result += str(len(c.members)) + ' '
         result += ')\n'
-        
+        '''
         result += 'Coalition list:\n\n'
         for c in list(map(str, self.coalition_set)):
             if len(c) > 3:
                 result += c
-        
+
+        result += str(infection()) + ' ' + str(decay()) + '\n'
+        '''     
         return result
     
     def simulate(self):
@@ -154,7 +162,7 @@ class World:
             #print('-------------------------------')
         
 def decay():
-    return 1 - 1/math.sqrt(1+ 0.5*(math.exp(-16*(TIME/4) + 12)))
+    return 1 - 1/math.sqrt(1+ 0.5*(math.exp(-16*(TIME/DECAY_STRETCH) + 12)))
 
 def infection():
     return INFECTION_RATES[TIME]
@@ -165,9 +173,27 @@ assert overall_exposure([0.5, 0.2, 0.3]) == 0.72
 
 #forming coalitions in each round
 world_1 = World()
+coalition_avg_sizes = []
+num_coalitions = []
 for i in range(ROUNDS):
     TIME = i
     world_1.simulate()
     print(world_1)
+    sum_sizes = 0
+    coalition_count = 0
+    for c in world_1.coalition_set:
+        if c.members:
+            coalition_count += 1
+            sum_sizes += len(c.members)
+    num_coalitions.append(coalition_count)
+    coalition_avg_sizes.append(sum_sizes/coalition_count)
     print('-------------------------------')
 
+
+plt.plot(coalition_avg_sizes, label="Average coalition size")
+#plt.savefig("coalition_avg_sizes.png")
+plt.plot(num_coalitions, label="Number of coalitions")
+plt.plot(INFECTION_RATES[:len(num_coalitions)], label="Infection Risk Factor")
+plt.legend()
+plt.xlabel('Time (months)')
+plt.savefig("num_coalitions.png")
