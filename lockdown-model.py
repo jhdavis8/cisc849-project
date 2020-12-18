@@ -9,12 +9,16 @@ import matplotlib.pyplot as plt
 NUM_AGENTS         = 20
 MAX_TIMESTEPS      = 10
                    
-MEAN_SOC           = 3.84/12
+MEAN_SOC           = 3.84/6
 VAR_SOC            = 1.18/12
+#MEAN_SOC           = 4.84
+#VAR_SOC            = 1.18
 TIME               = 0
 ROUNDS             = 16
 RISK_FACTOR_DIST   = [0.01]*2 + [0.25]*8 + [0.5]*25 + [0.75]*35 + [1]*30
+#RISK_FACTOR_DIST   = [1]
 OCCUPATION_CLASSES = [(9/9)]*3 + [(6.5/9)]*1 + [(7.5/9)]*11 + [(2.1/9)]*4 + [(1.8/9)]*10 + [(0.8/9)]*3 + [(1.3/9)]*2 + [(1.1/9)]*3 + [(1/9)]*86
+#OCCUPATION_CLASSES = [(9/9)]*3 + [(6.5/9)]*1 + [(7.5/9)]*11 + [(2.1/9)]*4
 MIN_MEMBERS        = 1
 MAX_MEMBERS        = 5
 INFECTION_RATES    = [(0.9/1), (1.0/1), (1.5/1), (2.0/1), (4.0/1), (1.2/1), (1.1/1), (2.0/1)]*3
@@ -175,6 +179,7 @@ assert overall_exposure([0.5, 0.2, 0.3]) == 0.72
 world_1 = World()
 coalition_avg_sizes = []
 num_coalitions = []
+decay_vals = []
 for i in range(ROUNDS):
     TIME = i
     world_1.simulate()
@@ -187,13 +192,21 @@ for i in range(ROUNDS):
             sum_sizes += len(c.members)
     num_coalitions.append(coalition_count)
     coalition_avg_sizes.append(sum_sizes/coalition_count)
+    decay_vals.append(decay())
     print('-------------------------------')
 
-
+'''
+plt.plot(decay_vals, label="Value of the Decay function")
+plt.legend()
+plt.xlabel('Time (months)')
+plt.savefig("decay_vals.png")
+'''
+    
 plt.plot(coalition_avg_sizes, label="Average coalition size")
 #plt.savefig("coalition_avg_sizes.png")
 plt.plot(num_coalitions, label="Number of coalitions")
 plt.plot(INFECTION_RATES[:len(num_coalitions)], label="Infection Risk Factor")
+plt.ylim(0, 20)
 plt.legend()
 plt.xlabel('Time (months)')
 plt.savefig("num_coalitions.png")
